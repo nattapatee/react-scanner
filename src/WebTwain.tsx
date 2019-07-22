@@ -2,46 +2,49 @@ import * as React from 'react'
 import { Component } from 'react'
 import './WebTwain.css';
 import Dynamsoft from 'dwt';
+import { applyConfg, updateVisibility } from './config';
+import { Scanner } from "./scanner";
 
 export class WebTwain extends Component {
+  scanner = new Scanner()
   constructor(props) {
     super(props);
 
     // This binding is necessary to make `this` work in the callback
-    this.handleClick = this.handleClick.bind(this);
   }
 
-  loadDWT() {
-    Dynamsoft.WebTwainEnv.Load();
+  ready() {
+    applyConfg(Dynamsoft);
+    updateVisibility(Dynamsoft);
+    Dynamsoft.WebTwainEnv.RegisterEvent('OnWebTwainReady', () => this.scanner.init());
   }
-
-  handleClick() {
-    Dynamsoft.WebTwainEnv.ProductKey = 't0111CQIAAH00/YsKpVpaTe5Xm+s/ZPUSGdou9HrMzQaStCvfRWPehSaMFAFRtaK2kvoJT87hAY2G75GJudN26BinfItJjgP3hCbMzB52jI7e2quxH5P5cxcP9qT4IN/ohDHfkPsfRe/2JBGWRC8cOGWj';
-
-      /*
-t0111CQIAAH00/YsKpVpaTe5Xm+s/ZPUSGdou9HrMzQaStCvfRWPehSaMFAFRtaK2kvoJT87hAY2G75GJudN26BinfItJjgP3hCbMzB52jI7e2quxH5P5cxcP9qT4IN/ohDHfkPsfRe/2JBGWRC8cOGWj
-      */
-    var dwObject = Dynamsoft.WebTwainEnv.GetWebTwain('dwtcontrolContainer');
-
-    if (dwObject) {
-      var bSelected = dwObject.SelectSource();
-      if (bSelected) {
-        var onAcquireImageSuccess = function () { dwObject.CloseSource(); };
-        var onAcquireImageFailure = onAcquireImageSuccess;
-        dwObject.OpenSource();
-        dwObject.AcquireImage({}, onAcquireImageSuccess, onAcquireImageFailure);
-      }
-    } else {
-      alert("Please press 'Load DWT' first!");
-    }
+  componentDidMount = () => {
+    this.ready()
   }
-
+  scanClick = (e) => {
+    this.scanner.scan();
+  }
+  insertImageClick = (e) => {
+    this.scanner.insertLocalImage();
+  }
+  httpImageClick = (e) => {
+    this.scanner.insertHttpImage();
+  }
+  uploadPdf = (e) => {
+    this.scanner.uploadPdfToServer();
+  }
   render() {
     return (
       <div>
-        <button onClick={this.loadDWT}>Load DWT</button><span>   </span>
-        <button onClick={this.handleClick}>Scan Document</button>
-        <div id="dwtcontrolContainer"></div>
+        <button onClick={this.scanClick}>Scan Document</button>
+        {/* <button onClick={this.insertImageClick}>Insert Images</button>
+        <button onClick={this.httpImageClick}>Http Images</button> */}
+        <button onClick={this.uploadPdf}>Upload</button>
+        <br />
+        <div>
+          <div id="dwtcontrolContainer" style={{ float: "left", marginRight: "20px" }}></div>
+          <div id="dwtcontrolContainerLargeViewer" style={{ float: "left" }}></div>
+        </div>
       </div>
     );
   }
